@@ -1,75 +1,82 @@
-# employee-salary-prediction
-🧠 Project Prompt: Employee Salary Prediction & Analysis
-🎯 Project Title:
-Employee Salary Prediction using Machine Learning with Web Interface
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+import pickle
 
-📌 Problem Statement:
-In modern organizations, determining fair and accurate employee compensation is crucial yet challenging. Manual salary decisions can be inconsistent and biased due to the complexity of factors like education level, experience, and age. This project aims to automate salary prediction using machine learning techniques, ensuring a data-driven and efficient decision-making process. The model is trained on real employee data to predict annual salaries with high accuracy, assisting HR teams and business analysts.
+# Load dataset
+df = pd.read_csv('data/employee_data.csv')
 
-🔧 System Development Approach:
-👨‍💻 Backend:
-Language: Python
+# Encode categorical columns
+df['position'] = df['position'].map({'Developer': 0, 'Manager': 1, 'Analyst': 2})
+df['education'] = df['education'].map({'Bachelor': 0, 'Master': 1, 'PhD': 2})
 
-Libraries Used:
+X = df[['experience', 'position', 'education']]
+y = df['salary']
 
-pandas for data handling
+# Train model
+model = LinearRegression()
+model.fit(X, y)
 
-scikit-learn for machine learning (e.g., Linear Regression, KNN)
+# Save model
+pickle.dump(model, open('model/salary_model.pkl', 'wb'))
+from flask import Flask, render_template, request
+import pandas as pd
+import numpy as np
+import pickle
 
-pickle for saving the trained model
+app = Flask(_name_)
 
-Flask for backend web integration
+# Load trained model
+model = pickle.load(open("model/salary_model.pkl", "rb"))
 
-🎨 Frontend:
-HTML for form structure
+# Encoding dictionaries (should match training)
+position_map = {'Developer': 0, 'Manager': 1, 'Analyst': 2}
+education_map = {'Bachelor': 0, 'Master': 1, 'PhD': 2}
 
-CSS for styling
+@app.route('/')
+def home():
+    return render_template("index.html")
 
-Form input includes: education level, years of experience, and age
+@app.route('/predict', methods=['POST'])
+def predict():
+    experience = int(request.form['experience'])
+    position = position_map[request.form['position']]
+    education = education_map[request.form['education']]
 
-📁 Folder Structure:
-cpp
-Copy
-Edit
-employee-salary-prediction/
-├── app.py
-├── model/
-│   └── salary_model.pkl
-├── data/
-│   └── employee_data.csv
-├── templates/
-│   └── index.html
-├── static/
-│   └── styles.css
-├── requirements.txt
-└── README.md
-📈 Algorithm and Deployment – Step-by-Step:
-Data Preprocessing:
+    features = np.array([[experience, position, education]])
+    prediction = model.predict(features)
 
-Load the dataset (employee_data.csv)
+    return render_template('index.html', prediction_text=f'Predicted Salary: ${prediction[0]:,.2f} per year')
 
-Select key features: education level, experience, and age
+if _name_ == '_main_':
+    app.run(debug=True)
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Employee Salary Predictor</title>
+</head>
+<body>
+    <h2>Employee Salary Prediction</h2>
+    <form method="POST" action="/predict">
+        <label>Experience (Years):</label><br>
+        <input type="number" name="experience" required><br><br>
 
-Clean and normalize the data
+        <label>Position:</label><br>
+        <select name="position" required>
+            <option value="Developer">Developer</option>
+            <option value="Manager">Manager</option>
+            <option value="Analyst">Analyst</option>
+        </select><br><br>
 
-Model Training:
+        <label>Education:</label><br>
+        <select name="education" required>
+            <option value="Bachelor">Bachelor</option>
+            <option value="Master">Master</option>
+            <option value="PhD">PhD</option>
+        </select><br><br>
 
-Use Linear Regression to fit the data
+        <input type="submit" value="Predict Salary">
+    </form>
 
-Optionally compare with KNN (based on your uploaded notebook)
-
-Save trained model to salary_model.pkl using pickle
-
-Web Application:
-
-Flask is used to build a backend API
-
-Frontend (HTML + CSS) form takes user inputs
-
-Inputs are passed to the model, and prediction is displayed
-
-Prediction Output:
-
-The predicted monthly salary is multiplied by 12
-
-Final result: Predicted Annual Salary (in ₹)
+    <h3>{{ prediction_text }}</h3>
+</body>
+</html>
