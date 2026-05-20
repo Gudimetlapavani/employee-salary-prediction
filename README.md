@@ -56,7 +56,9 @@ employee-salary-prediction/
 │
 ├── templates/
 │   └── index.html
-How to Run Locally
+
+
+# How to Run Locally
 Clone the repository
 git clone https://github.com/Gudimetlapavani/employee-salary-prediction.git
 Open project folder
